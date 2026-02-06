@@ -10,6 +10,11 @@ interface TerminalProps {
 export const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onMatrixToggle }) => {
   const [history, setHistory] = useState<string[]>(['Welcome to DriDev Shell v1.0.0', 'Type "help" for available commands.']);
   const [input, setInput] = useState('');
+  
+  // Command History States
+  const [userCommands, setUserCommands] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -21,10 +26,16 @@ export const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onMatrixTog
   }, [history, isOpen]);
 
   const handleCommand = (cmd: string) => {
-    const trimmed = cmd.trim().toLowerCase();
+    const trimmed = cmd.trim();
+    if (trimmed) {
+      setUserCommands(prev => [...prev, trimmed]);
+    }
+    setHistoryIndex(-1); // Reset history index on new command
+
+    const lowered = trimmed.toLowerCase();
     const newHistory = [...history, `➜  ~ ${cmd}`];
 
-    switch (trimmed) {
+    switch (lowered) {
       case 'help':
         newHistory.push('Available commands:', '  about     - Who am I?', '  contact   - Get in touch', '  clear     - Clear terminal', '  date      - Current date/time', '  sudo      - Admin privileges', '  matrix    - Toggle Matrix mode');
         break;
@@ -66,6 +77,25 @@ export const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onMatrixTog
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleCommand(input);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (userCommands.length > 0) {
+            const newIndex = historyIndex === -1 ? userCommands.length - 1 : Math.max(0, historyIndex - 1);
+            setHistoryIndex(newIndex);
+            setInput(userCommands[newIndex]);
+        }
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndex !== -1) {
+            const newIndex = historyIndex + 1;
+            if (newIndex >= userCommands.length) {
+                setHistoryIndex(-1);
+                setInput('');
+            } else {
+                setHistoryIndex(newIndex);
+                setInput(userCommands[newIndex]);
+            }
+        }
     }
   };
 

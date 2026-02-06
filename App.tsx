@@ -1,17 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { TabId, TabConfig } from './types';
 import { TABS } from './constants';
-import { HomeView } from './views/HomeView';
-import { AboutView } from './views/AboutView';
-import { ProjectsView } from './views/ProjectsView';
-import { CertificationsView } from './views/CertificationsView';
-import { ContactView } from './views/ContactView';
 import { Icon } from './components/Icon';
 import { MatrixRain } from './components/MatrixRain';
 import { Toast } from './components/Toast';
 import { Terminal } from './components/Terminal';
 import { ContextMenu } from './components/ContextMenu';
+
+// Lazy Load Views
+const HomeView = lazy(() => import('./views/HomeView').then(module => ({ default: module.HomeView })));
+const AboutView = lazy(() => import('./views/AboutView').then(module => ({ default: module.AboutView })));
+const ProjectsView = lazy(() => import('./views/ProjectsView').then(module => ({ default: module.ProjectsView })));
+const CertificationsView = lazy(() => import('./views/CertificationsView').then(module => ({ default: module.CertificationsView })));
+const ContactView = lazy(() => import('./views/ContactView').then(module => ({ default: module.ContactView })));
+
+const LoadingSpinner = () => (
+  <div className="flex flex-col items-center justify-center h-full text-vscode-text animate-fadeIn">
+    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-vscode-accent mb-4"></div>
+    <span className="font-mono text-xs text-gray-500">Compiling module...</span>
+  </div>
+);
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>(TabId.HOME);
@@ -158,14 +167,20 @@ const App: React.FC = () => {
   };
   
   const renderContent = () => {
-    switch (activeTab) {
-      case TabId.HOME: return <HomeView />;
-      case TabId.ABOUT: return <AboutView />;
-      case TabId.PROJECTS: return <ProjectsView />;
-      case TabId.CERTIFICATES: return <CertificationsView />;
-      case TabId.CONTACT: return <ContactView />;
-      default: return <HomeView />;
-    }
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        {(() => {
+          switch (activeTab) {
+            case TabId.HOME: return <HomeView />;
+            case TabId.ABOUT: return <AboutView />;
+            case TabId.PROJECTS: return <ProjectsView />;
+            case TabId.CERTIFICATES: return <CertificationsView />;
+            case TabId.CONTACT: return <ContactView />;
+            default: return <HomeView />;
+          }
+        })()}
+      </Suspense>
+    );
   };
 
   const getPageTitle = () => {

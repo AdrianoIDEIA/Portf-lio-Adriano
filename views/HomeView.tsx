@@ -153,17 +153,12 @@ export const HomeView: React.FC = () => {
             {/* Image Container - Circular for better centralization */}
             <div className="relative w-full h-full bg-vscode-sidebar rounded-full border-4 border-vscode-sidebar ring-2 ring-vscode-activity overflow-hidden shadow-2xl z-10">
               <img 
-                src="1765412322129.png" 
+                src="https://github.com/Dritcmg.png" 
                 alt="Adriano Camargo" 
                 className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
                 onError={(e) => {
                   const img = e.target as HTMLImageElement;
-                  const currentSrc = img.src;
-                  if (!currentSrc.includes('github.com')) {
-                    img.src = 'https://github.com/Dritcmg.png';
-                  } else {
-                    img.src = 'https://ui-avatars.com/api/?name=Adriano+Camargo&background=007acc&color=fff&size=512';
-                  }
+                  img.src = 'https://ui-avatars.com/api/?name=Adriano+Camargo&background=007acc&color=fff&size=512';
                 }}
               />
               

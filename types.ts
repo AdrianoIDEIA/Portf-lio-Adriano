@@ -21,6 +21,7 @@ export interface Certification {
   date: string;
   credentialId: string;
   competencies?: string;
+  url?: string;
 }
 
 export enum TabId {
