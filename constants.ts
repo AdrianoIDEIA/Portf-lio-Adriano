@@ -10,10 +10,17 @@ export const CONTACT_INFO = {
   PHONE: '15981189090',
   PHONE_FORMATTED: '(15) 98118-9090',
   EMAIL: 'adrianocamargooliver@gmail.com',
-  WHATSAPP_URL: 'https://wa.me/5515981189090'
+  WHATSAPP_URL: 'https://wa.me/5515981189090?text=Ol%C3%A1%2C%20vi%20seu%20portf%C3%B3lio%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento.'
 };
 
-export const EXCLUDED_REPOS = ['janara', 'g5', 'dashboard', 'bio-link'];
+// Repositories you explicitly want to show. 
+// If empty, the app will fallback to showing top starred repos.
+export const PINNED_REPOS = [
+  'n8n-automation', 
+  'portfolio-v2',
+  'bi-dashboard-sales', 
+  'python-rpa-suite'
+];
 
 export const TABS: TabConfig[] = [
   { id: TabId.HOME, label: 'home.tsx', icon: '⚛️', color: 'text-blue-400' },

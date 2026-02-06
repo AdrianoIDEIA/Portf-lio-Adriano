@@ -1,5 +1,5 @@
 import { GitHubRepo } from '../types';
-import { EXCLUDED_REPOS } from '../constants';
+import { PINNED_REPOS } from '../constants';
 
 export const fetchRepos = async (): Promise<GitHubRepo[]> => {
   try {
@@ -9,14 +9,23 @@ export const fetchRepos = async (): Promise<GitHubRepo[]> => {
     }
     const data: GitHubRepo[] = await response.json();
     
-    // Filter logic
-    return data.filter(repo => {
-      const name = repo.name.toLowerCase();
-      // Exclude specific terms
-      const isExcluded = EXCLUDED_REPOS.some(term => name.includes(term.toLowerCase()));
-      // Also filter out forks if desired, or private repos (API only returns public anyway)
-      return !isExcluded;
-    });
+    // 1. Try to find pinned repos
+    const pinned = data.filter(repo => 
+      PINNED_REPOS.some(pin => repo.name.toLowerCase() === pin.toLowerCase())
+    );
+
+    // 2. If pinned repos are found, return them (sorted by how they appear in the pinned list)
+    if (pinned.length > 0) {
+      return pinned.sort((a, b) => {
+        return PINNED_REPOS.indexOf(a.name) - PINNED_REPOS.indexOf(b.name);
+      });
+    }
+
+    // 3. Fallback: If no pinned repos match, return top 6 repos by stars
+    return data
+      .sort((a, b) => b.stargazers_count - a.stargazers_count)
+      .slice(0, 6);
+
   } catch (error) {
     console.error("Error fetching repos:", error);
     return [];

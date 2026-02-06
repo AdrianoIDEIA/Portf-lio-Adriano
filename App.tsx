@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { TabId, TabConfig } from './types';
 import { TABS } from './constants';
 import { HomeView } from './views/HomeView';
@@ -9,6 +10,8 @@ import { ContactView } from './views/ContactView';
 import { Icon } from './components/Icon';
 import { MatrixRain } from './components/MatrixRain';
 import { Toast } from './components/Toast';
+import { Terminal } from './components/Terminal';
+import { ContextMenu } from './components/ContextMenu';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>(TabId.HOME);
@@ -24,6 +27,12 @@ const App: React.FC = () => {
   const [matrixMode, setMatrixMode] = useState(false);
   const [konamiIndex, setKonamiIndex] = useState(0);
   const [toast, setToast] = useState<{message: string, type: 'info' | 'success' | 'warning'} | null>(null);
+  
+  // Terminal State
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+
+  // Context Menu State
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
 
   // Konami Code Sequence: Up Up Down Down Left Right Left Right B A
   const KONAMI_CODE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
@@ -58,11 +67,55 @@ const App: React.FC = () => {
         e.preventDefault();
         setToast({ message: "Acesso negado: Arquivos confidenciais.", type: 'info' });
       }
+
+      // 4. Handle Ctrl + J (Toggle Terminal)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'j') {
+        e.preventDefault();
+        setIsTerminalOpen(prev => !prev);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [konamiIndex, matrixMode]);
+
+  // Context Menu Handler
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({ x: e.pageX, y: e.pageY, visible: true });
+  };
+
+  const closeContextMenu = () => setContextMenu({ ...contextMenu, visible: false });
+
+  useEffect(() => {
+    const handleClick = () => closeContextMenu();
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
+
+  const handleContextMenuAction = (action: string) => {
+     switch(action) {
+         case 'definition':
+             setActiveTab(TabId.ABOUT);
+             setToast({ message: "Navigating to definition (About Me)...", type: 'info'});
+             break;
+         case 'references':
+             setToast({ message: "404 References found. (It's a joke)", type: 'warning'});
+             break;
+         case 'refactor':
+             setIsShaking(true);
+             setTimeout(() => setIsShaking(false), 1000);
+             setToast({ message: "Refactoring code... Done!", type: 'success'});
+             break;
+         case 'format':
+             setPrettierStatus('Prettier ✓');
+             setToast({ message: "Document formatted.", type: 'success'});
+             break;
+         case 'command':
+             setToast({ message: "Command Palette unavailable in read-only mode.", type: 'info'});
+             break;
+     }
+  };
 
   // Easter Egg Handlers
   const handleRedBtn = () => {
@@ -103,7 +156,7 @@ const App: React.FC = () => {
     setPrettierStatus('Prettier ✓');
     setTimeout(() => setPrettierStatus('Prettier'), 2000);
   };
-
+  
   const renderContent = () => {
     switch (activeTab) {
       case TabId.HOME: return <HomeView />;
@@ -115,26 +168,46 @@ const App: React.FC = () => {
     }
   };
 
+  const getPageTitle = () => {
+      switch(activeTab) {
+          case TabId.HOME: return 'Home';
+          case TabId.ABOUT: return 'Sobre';
+          case TabId.PROJECTS: return 'Projetos';
+          case TabId.CERTIFICATES: return 'Certificados';
+          case TabId.CONTACT: return 'Contato';
+          default: return 'Portfolio';
+      }
+  };
+
   return (
-    <div className={`flex h-screen w-screen bg-vscode-bg text-vscode-text overflow-hidden font-sans selection:bg-vscode-accent selection:text-white ${isShaking ? 'animate-shake' : ''}`}>
-      
+    <div 
+        className={`flex h-screen w-screen bg-vscode-bg text-vscode-text overflow-hidden font-sans selection:bg-vscode-accent selection:text-white ${isShaking ? 'animate-shake' : ''}`}
+        onContextMenu={handleContextMenu}
+    >
+      <Helmet>
+        <title>{getPageTitle()} | Adriano Camargo</title>
+      </Helmet>
+
       {matrixMode && <MatrixRain />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <ContextMenu {...contextMenu} onClose={closeContextMenu} onAction={handleContextMenuAction} />
 
       {/* Activity Bar (Far Left) */}
       <div className="w-12 bg-vscode-activity flex flex-col items-center py-4 border-r border-black hidden sm:flex z-20">
-        <div className="mb-4 text-gray-500 hover:text-white cursor-pointer" title="Files"><Icon name="code" className="w-6 h-6" /></div>
-        <div className="mb-4 text-gray-500 hover:text-white cursor-pointer" title="Search"><Icon name="external" className="w-5 h-5 transform rotate-90" /></div>
-        <div className="mb-4 text-gray-500 hover:text-white cursor-pointer" title="Source Control"><Icon name="branch" className="w-6 h-6" /></div>
+        <div className="mb-4 text-gray-400 hover:text-white cursor-pointer transition-colors" title="Files"><Icon name="code" className="w-6 h-6" /></div>
+        <div className="mb-4 text-gray-400 hover:text-white cursor-pointer transition-colors" title="Search"><Icon name="external" className="w-5 h-5 transform rotate-90" /></div>
+        <div className="mb-4 text-gray-400 hover:text-white cursor-pointer transition-colors" title="Source Control"><Icon name="branch" className="w-6 h-6" /></div>
         <div className="flex-grow"></div>
-        <div className="mb-4 text-gray-500 hover:text-white cursor-pointer" title="Extensions"><Icon name="external" className="w-6 h-6" /></div>
+        <div className="mb-4 text-gray-400 hover:text-white cursor-pointer transition-colors" title="Settings">
+            <Icon name="gear" className="w-6 h-6" />
+        </div>
       </div>
 
       {/* Sidebar (File Explorer) */}
       <div className={`${isSidebarOpen ? 'w-64' : 'w-0'} bg-vscode-sidebar flex flex-col transition-all duration-300 border-r border-black relative z-10`}>
         <div className="h-10 text-xs font-bold uppercase tracking-wider p-4 text-gray-400 flex justify-between items-center whitespace-nowrap overflow-hidden">
           <span>Explorer</span>
-          <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500 hover:text-white sm:hidden">x</button>
+          <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500 hover:text-white sm:hidden p-2">x</button>
         </div>
         
         {/* Project Folder */}
@@ -148,7 +221,7 @@ const App: React.FC = () => {
                     <div 
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`px-6 py-1 flex items-center gap-2 text-sm cursor-pointer border-l-2 transition-colors
+                        className={`px-6 py-2 sm:py-1 flex items-center gap-2 text-sm cursor-pointer border-l-2 transition-colors
                             ${activeTab === tab.id 
                                 ? 'bg-vscode-activity border-vscode-accent text-white' 
                                 : 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-[#2a2d2e]'}`}
@@ -165,13 +238,14 @@ const App: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 bg-vscode-bg relative">
         
         {/* Top Header / Tabs */}
-        <div className="h-10 bg-vscode-tab flex items-end overflow-x-auto no-scrollbar border-b border-black select-none">
+        <div className="h-12 sm:h-10 bg-vscode-tab flex items-end overflow-x-auto no-scrollbar border-b border-black select-none">
             
             {/* Mobile Menu Toggle */}
             {!isSidebarOpen && (
                 <button 
                     onClick={() => setIsSidebarOpen(true)}
-                    className="h-full px-3 text-gray-400 hover:text-white hover:bg-vscode-activity flex items-center sm:hidden"
+                    className="h-full px-4 text-gray-400 hover:text-white hover:bg-vscode-activity flex items-center sm:hidden"
+                    aria-label="Open Menu"
                 >
                     ☰
                 </button>
@@ -182,12 +256,12 @@ const App: React.FC = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                        group flex items-center gap-2 px-4 py-2 text-sm min-w-[120px] max-w-[200px] cursor-pointer border-r border-black h-full relative
+                        group flex items-center gap-2 px-4 py-3 sm:py-2 text-sm min-w-[120px] max-w-[200px] cursor-pointer border-r border-black h-full relative
                         ${activeTab === tab.id ? 'bg-vscode-activeTab text-white' : 'bg-[#2d2d2d] text-gray-500 hover:bg-[#2a2d2e]'}
                     `}
                 >
                     {/* Active Indicator Top Line */}
-                    {activeTab === tab.id && <div className="absolute top-0 left-0 w-full h-[1px] bg-vscode-accent"></div>}
+                    {activeTab === tab.id && <div className="absolute top-0 left-0 w-full h-[2px] bg-vscode-accent"></div>}
                     
                     <span className="text-xs">{tab.icon}</span>
                     <span className={`truncate ${activeTab === tab.id ? 'text-white' : tab.color}`}>{tab.label}</span>
@@ -206,7 +280,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Breadcrumbs / Path */}
-        <div className="h-6 bg-vscode-bg flex items-center px-4 text-xs text-gray-500 border-b border-vscode-activity shadow-sm z-10">
+        <div className="h-6 bg-vscode-bg flex items-center px-4 text-xs text-gray-500 border-b border-vscode-activity shadow-sm z-10 hidden sm:flex">
             <span>portfolio-v2</span>
             <span className="mx-1">›</span>
             <span>src</span>
@@ -218,6 +292,9 @@ const App: React.FC = () => {
         <main className="flex-1 overflow-y-auto overflow-x-hidden relative scroll-smooth">
             {renderContent()}
         </main>
+        
+        {/* Terminal Panel */}
+        <Terminal isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} onMatrixToggle={() => setMatrixMode(!matrixMode)} />
 
         {/* Status Bar */}
         <div className="h-6 bg-vscode-accent flex items-center justify-between px-3 text-xs text-white select-none z-20">
@@ -239,6 +316,14 @@ const App: React.FC = () => {
                     <span>{fakeErrorCount}</span>
                     <span className="w-3 h-3 text-[10px] ml-1">⚠️</span>
                     <span>0</span>
+                </div>
+                <div 
+                     className="flex items-center gap-1 hover:bg-white/10 px-1 rounded cursor-pointer transition-colors"
+                     onClick={() => setIsTerminalOpen(!isTerminalOpen)}
+                     title="Toggle Terminal (Ctrl+J)"
+                >
+                     <Icon name="terminal" className="w-3 h-3" />
+                     <span className="hidden sm:inline">Terminal</span>
                 </div>
             </div>
             <div className="flex items-center gap-4 hidden sm:flex">
