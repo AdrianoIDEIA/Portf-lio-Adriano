@@ -26,6 +26,7 @@ export interface Certification {
 
 export enum TabId {
   HOME = 'home.tsx',
+  TEAM = 'team.json',
   PROJECTS = 'projects.json',
   ABOUT = 'about.md',
   CERTIFICATES = 'certificates.ts',

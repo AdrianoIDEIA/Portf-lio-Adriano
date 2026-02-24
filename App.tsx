@@ -10,6 +10,7 @@ import { ContextMenu } from './components/ContextMenu';
 
 // Lazy Load Views
 const HomeView = lazy(() => import('./views/HomeView').then(module => ({ default: module.HomeView })));
+const TeamView = lazy(() => import('./views/TeamView').then(module => ({ default: module.TeamView })));
 const AboutView = lazy(() => import('./views/AboutView').then(module => ({ default: module.AboutView })));
 const ProjectsView = lazy(() => import('./views/ProjectsView').then(module => ({ default: module.ProjectsView })));
 const CertificationsView = lazy(() => import('./views/CertificationsView').then(module => ({ default: module.CertificationsView })));
@@ -45,6 +46,17 @@ const App: React.FC = () => {
 
   // Konami Code Sequence: Up Up Down Down Left Right Left Right B A
   const KONAMI_CODE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+
+  useEffect(() => {
+    // Announce team expansion
+    const timer = setTimeout(() => {
+        setToast({ 
+            message: "🚀 Novidade: A equipe cresceu! Foco total em Front, Back e Projetos.", 
+            type: 'info' 
+        });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -171,7 +183,8 @@ const App: React.FC = () => {
       <Suspense fallback={<LoadingSpinner />}>
         {(() => {
           switch (activeTab) {
-            case TabId.HOME: return <HomeView />;
+            case TabId.HOME: return <HomeView onNavigate={setActiveTab} />;
+            case TabId.TEAM: return <TeamView />;
             case TabId.ABOUT: return <AboutView />;
             case TabId.PROJECTS: return <ProjectsView />;
             case TabId.CERTIFICATES: return <CertificationsView />;
@@ -186,6 +199,7 @@ const App: React.FC = () => {
   const getPageTitle = () => {
       switch(activeTab) {
           case TabId.HOME: return 'Home';
+          case TabId.TEAM: return 'Team';
           case TabId.ABOUT: return 'Sobre';
           case TabId.PROJECTS: return 'Projetos';
           case TabId.CERTIFICATES: return 'Certificados';

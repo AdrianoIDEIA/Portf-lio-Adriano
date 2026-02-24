@@ -24,6 +24,7 @@ export const PINNED_REPOS = [
 
 export const TABS: TabConfig[] = [
   { id: TabId.HOME, label: 'home.tsx', icon: '⚛️', color: 'text-blue-400' },
+  { id: TabId.TEAM, label: 'team.json', icon: '👥', color: 'text-purple-400' },
   { id: TabId.ABOUT, label: 'README.md', icon: '📝', color: 'text-yellow-400' },
   { id: TabId.PROJECTS, label: 'repos.json', icon: '📦', color: 'text-orange-400' },
   { id: TabId.CERTIFICATES, label: 'certificates.ts', icon: '📜', color: 'text-green-400' },
